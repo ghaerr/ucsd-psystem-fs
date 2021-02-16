@@ -21,12 +21,6 @@
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
-#include <libexplain/close.h>
-#include <libexplain/fstat.h>
-#include <libexplain/mmap.h>
-#include <libexplain/munmap.h>
-#include <libexplain/open.h>
-#include <libexplain/output.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -89,7 +83,7 @@ sector_io_mmap::~sector_io_mmap()
 #ifdef HAVE_MMAP
     if (base)
     {
-        explain_munmap_or_die(base, length);
+        munmap(base, length);
     }
 #endif
     base = 0;
@@ -109,20 +103,21 @@ sector_io_mmap::sector_io_mmap(const rcstring &a_filename, bool a_read_only) :
     int mode = O_RDWR;
     if (read_only)
         mode = O_RDONLY;
-    int fd = explain_open_or_die(filename.c_str(), mode, 0666);
+    int fd = open(filename.c_str(), mode, 0666);
     DEBUG(2, "fd = %d", fd);
     struct stat st;
-    explain_fstat_or_die(fd, &st);
+    fstat(fd, &st);
 
     // Don't use memory mapped I/O for absurdly large disk images.
     // Sensable disk images are all less than 32K of 512 byte blocks.
     if (st.st_size > ((off_t)1 << (15 + 9)))
     {
-        explain_output_error_and_die
+        printf
         (
             "%s: too large for valid file system",
             filename.c_str()
         );
+		exit(1);
     }
 
     length = st.st_size;
@@ -133,9 +128,9 @@ sector_io_mmap::sector_io_mmap(const rcstring &a_filename, bool a_read_only) :
     off_t offset = 0;
     base =
         (unsigned char *)
-        explain_mmap_or_die(0, length, prot, flags, fd, offset);
+        mmap(0, length, prot, flags, fd, offset);
     DEBUG(2, "base = %p", base);
-    explain_close_or_die(fd);
+    close(fd);
 #endif
 }
 

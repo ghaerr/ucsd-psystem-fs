@@ -19,10 +19,6 @@
 #include <lib/config.h>
 #include <cstring>
 #include <fcntl.h>
-#include <libexplain/close.h>
-#include <libexplain/open.h>
-#include <libexplain/read.h>
-#include <libexplain/write.h>
 
 #include <lib/directory.h>
 
@@ -37,12 +33,12 @@ directory::get_boot_blocks(const rcstring &filename)
     const
 {
     int flags = O_WRONLY | O_BINARY | O_TRUNC | O_CREAT;
-    int fd = explain_open_or_die(filename.c_str(), flags, 0666);
+    int fd = open(filename.c_str(), flags, 0666);
     char data[0x400];
     // FIXME: error handling
     deeper->read(0, data, sizeof(data));
-    explain_write_or_die(fd, data, sizeof(data));
-    explain_close_or_die(fd);
+    write(fd, data, sizeof(data));
+    close(fd);
 }
 
 
@@ -50,13 +46,13 @@ void
 directory::set_boot_blocks(const rcstring &filename)
 {
     int flags = O_RDONLY | O_BINARY;
-    int fd = explain_open_or_die(filename.c_str(), flags, 0666);
+    int fd = open(filename.c_str(), flags, 0666);
     char data[0x400];
-    ssize_t n = explain_read_or_die(fd, data, sizeof(data));
+    ssize_t n = read(fd, data, sizeof(data));
     assert(n >= 0);
     if (size_t(n) < sizeof(data))
         memset(data + n, 0, sizeof(data) - n);
     // FIXME: error handling
     deeper->write(0, data, sizeof(data));
-    explain_close_or_die(fd);
+    close(fd);
 }

@@ -21,7 +21,6 @@
 #include <cerrno>
 #include <cstring>
 #include <fcntl.h>
-#include <libexplain/open.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -50,7 +49,7 @@ sector_io_raw::sector_io_raw(const rcstring &a_filename, bool a_read_only) :
     DEBUG(2, "sector_io_raw::sector_io_raw(this = %p, filename = %s, "
         "read_only = %d)", this, filename.quote_c().c_str(), read_only);
     int mode = (read_only ? O_RDONLY : (O_RDWR | O_CREAT));
-    fd = explain_open_or_die(filename.c_str(), mode, 0666);
+    fd = open(filename.c_str(), mode, 0666);
     DEBUG(3, "fd = %d", fd);
 }
 

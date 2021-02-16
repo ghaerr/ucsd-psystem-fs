@@ -21,9 +21,6 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/statvfs.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
-#include <libexplain/statvfs.h>
 
 #include <lib/version.h>
 
@@ -31,7 +28,7 @@
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "test_statfs";
     fprintf(stderr, "Usage: %s [ <option>... ] <filename>\n", prog);
     fprintf(stderr, "       %s -V\n", prog);
     exit(1);
@@ -41,8 +38,6 @@ usage(void)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     for (;;)
     {
         int c = getopt(argc, argv, "V");
@@ -63,7 +58,7 @@ main(int argc, char **argv)
     const char *filename = argv[optind];
 
     struct statvfs st;
-    explain_statvfs_or_die(filename, &st);
+    statvfs(filename, &st);
 
     printf("f_fsid = 0x%08lX\n", (long)st.f_fsid);
     printf("f_bsize = %9ld\n", (long)st.f_bsize);

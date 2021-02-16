@@ -23,9 +23,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <libexplain/fstat.h>
-#include <libexplain/open.h>
-#include <libexplain/read.h>
 
 #include <lib/input/file.h>
 
@@ -51,7 +48,7 @@ input_file::input_file(const rcstring &a_path) :
     // files, so I'm reluctant to always use the O_BINARY mode bit.
     mode |= O_BINARY;
 #endif
-    fd = explain_open_or_die(path.c_str(), mode, 0666);
+    fd = open(path.c_str(), mode, 0666);
 }
 
 
@@ -69,7 +66,7 @@ input_file::read_inner(void *data, size_t len)
         return 0;
     if (fd < 0)
         return -EBADF;
-    ssize_t result = explain_read_or_die(fd, data, len);
+    ssize_t result = ::read(fd, data, len);
     pos += result;
     return result;
 }
@@ -88,7 +85,7 @@ input_file::length()
     if (fd < 0)
         return -EBADF;
     struct stat st;
-    explain_fstat_or_die(fd, &st);
+    ::fstat(fd, &st);
     return st.st_size;
 }
 
@@ -109,5 +106,5 @@ void
 input_file::fstat(struct stat &st)
 {
     assert(fd >= 0);
-    explain_fstat_or_die(fd, &st);
+    ::fstat(fd, &st);
 }

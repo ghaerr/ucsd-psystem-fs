@@ -19,7 +19,6 @@
 #include <lib/config.h>
 #include <cstdio>
 #include <cstring>
-#include <libexplain/output.h>
 
 #include <lib/endof.h>
 #include <lib/rcstring.h>
@@ -72,10 +71,11 @@ sector_io::interleave_factory(const char *name, const sector_io::pointer &iop)
         if (0 == strcasecmp(name, tp->name))
             return tp->create(iop);
     }
-    explain_output_error_and_die
+    printf
     (
         "interleave pattern %s unknown",
         rcstring(name).quote_c().c_str()
     );
+	exit(1);
     return iop;
 }

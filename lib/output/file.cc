@@ -21,10 +21,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/time.h>
-#include <libexplain/close.h>
-#include <libexplain/open.h>
-#include <libexplain/utimes.h>
-#include <libexplain/write.h>
 
 #include <lib/output/file.h>
 
@@ -38,7 +34,7 @@ output_file::~output_file()
     flush();
 
     if (fd >= 0)
-        explain_close_or_die(fd);
+        close(fd);
     fd = -1;
     pos = 0;
 }
@@ -61,7 +57,7 @@ output_file::filename()
 void
 output_file::write_inner(const void *data, size_t len)
 {
-    explain_write_or_die(fd, data, len);
+    ::write(fd, data, len);
     if (len > 0)
         bol = (((char *)data)[len - 1] == '\n');
     pos += len;
@@ -85,7 +81,7 @@ output_file::output_file(const rcstring &fn, bool binary) :
     if (binary)
         mode |= O_BINARY;
 #endif
-    fd = explain_open_or_die(fn.c_str(), mode, 0666);
+    fd = open(fn.c_str(), mode, 0666);
 }
 
 
@@ -98,5 +94,5 @@ output_file::utime_ns(const struct timespec *utb)
     tv2[1].tv_sec = utb[1].tv_sec;
     tv2[1].tv_usec = utb[1].tv_nsec / 1000;
 
-    explain_utimes_or_die(file_name.c_str(), tv2);
+    utimes(file_name.c_str(), tv2);
 }

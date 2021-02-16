@@ -4361,7 +4361,7 @@ $as_echo "
         library.  If you have a package-based system, you will need to
         install the libfuse-dev package as well.
         " >&6; }
-    exit 1
+    #exit 1
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for explain_open in -lexplain" >&5
@@ -4422,7 +4422,7 @@ $as_echo "
         If you have a package-based system, you will need to install the
         libexplain-dev package.
         " >&6; }
-    exit 1
+    #exit 1
 fi
 
 for ac_func in mmap usleep

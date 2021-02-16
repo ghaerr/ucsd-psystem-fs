@@ -20,7 +20,6 @@
 #include <cassert>
 #include <cerrno>
 #include <cstring>
-#include <libexplain/output.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -34,22 +33,24 @@ input_psystem::~input_psystem()
     int err = dep->flush();
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "flush %s: %s",
             name().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
     err = dep->release();
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "release %s: %s",
             name().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
     dep = 0;
 }
@@ -63,12 +64,13 @@ input_psystem::input_psystem(directory_entry *a_dep) :
     int err = dep->open();
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "open %s: %s",
             name().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
 }
 
@@ -94,12 +96,13 @@ input_psystem::read_inner(void *data, size_t size)
     if (n < 0)
     {
         // EINVAL usually means truncated file system image
-        explain_output_error_and_die
+        printf
         (
             "read %s: %s",
             name().quote_c().c_str(),
             strerror(-n)
         );
+		exit(1);
     }
     address += n;
     return n;
@@ -112,12 +115,13 @@ input_psystem::fstat(struct stat &st)
     int rc = dep->getattr(&st);
     if (rc < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "fstat %s: %s",
             name().quote_c().c_str(),
             strerror(-rc)
         );
+		exit(1);
     }
 }
 

@@ -19,7 +19,6 @@
 #include <lib/config.h>
 #include <cerrno>
 #include <cstring>
-#include <libexplain/output.h>
 
 #include <lib/directory.h>
 
@@ -58,11 +57,12 @@ interleaved_raw_sector_io(const rcstring &filename, bool read_only)
         //
         // No luck.
         //
-        explain_output_error_and_die
+        printf
         (
             "the %s file does not appear to have a UCSD p-System volume label",
             filename.quote_c().c_str()
         );
+        exit(1);
         return raw;
     }
 
@@ -87,27 +87,29 @@ directory::factory(const rcstring &filename, bool read_only, concern_t level)
         //
         // If we can't read the volume, make sure the mount fails as well.
         //
-        explain_output_error_and_die
+        printf
         (
             "read %s: %s",
             filename.c_str(),
             strerror(-err)
         );
+        exit(1);
     }
     if (err > 0)
     {
         if (level >= concern_repair)
         {
-            explain_output_error_and_die
+            printf
             (
                 "%s: repaired %d format error%s",
                 filename.c_str(),
                 err,
                 (err == 1 ? "" : "s")
             );
+            exit(1);
             // NOTREACHED
         }
-        explain_output_error
+        printf
         (
             "%s: warning: found %d format error%s",
             filename.c_str(),

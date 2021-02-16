@@ -19,8 +19,6 @@
 #include <lib/config.h>
 #include <cstdio>
 #include <getopt.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
 #include <unistd.h>
 
 #include <lib/debug.h>
@@ -31,7 +29,7 @@
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsys_fsck";
     fprintf(stderr, "Usage: %s [ <option>... ] <volume>\n", prog);
     fprintf(stderr, "       %s --version\n", prog);
     exit(1);
@@ -41,9 +39,6 @@ usage(void)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
-
     //
     // Parse the command line options.
     //
@@ -94,10 +89,11 @@ main(int argc, char **argv)
     //
     if (concern_level == concern_repair && read_only_flag)
     {
-        explain_output_error_and_die
+        printf
         (
             "unable to fix problems (--fix) if read only (--read-only)"
         );
+		exit(1);
     }
 
     //

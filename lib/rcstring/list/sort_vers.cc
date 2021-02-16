@@ -28,7 +28,8 @@ cmp(const void *va, const void *vb)
     const rcstring *a = (const rcstring *)va;
     const rcstring *b = (const rcstring *)vb;
     // C locale
-    return strverscmp(a->c_str(), b->c_str());
+    //return strverscmp(a->c_str(), b->c_str());
+    return strcmp(a->c_str(), b->c_str());
 }
 
 

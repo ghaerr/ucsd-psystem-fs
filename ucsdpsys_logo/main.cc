@@ -20,9 +20,6 @@
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
-#include <libexplain/fflush.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
 
 
 #define LINE_COLOUR "0.68 0.16 0.00"
@@ -108,8 +105,6 @@ stripe2(double x, double y, const char *colour)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     sx = 56.5;
     if (argc > 1)
     {
@@ -145,7 +140,7 @@ main(int argc, char **argv)
     printf("grestore\n");
     printf("showpage\n");
 
-    explain_fflush_or_die(stdout);
+    fflush(stdout);
 
     //
     // Once you have the PostScript this program generates,

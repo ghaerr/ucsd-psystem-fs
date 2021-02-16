@@ -23,19 +23,8 @@
 #include <cstdlib>
 #include <ctime>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <getopt.h>
-#include <libexplain/close.h>
-#include <libexplain/creat.h>
-#include <libexplain/fclose.h>
-#include <libexplain/fopen.h>
-#include <libexplain/fstat.h>
-#include <libexplain/lseek.h>
-#include <libexplain/open.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
-#include <libexplain/read.h>
-#include <libexplain/utime.h>
-#include <libexplain/write.h>
 #include <unistd.h>
 #include <utime.h>
 
@@ -337,25 +326,28 @@ extract_one_file(const direc &rt11, const rcstring &dsk, const rcstring &get)
     const filentry *fep = rt11.find(get);
     if (!fep)
     {
-        explain_output_error_and_die
+        printf
         (
             "file %s not found",
             get.quote_c().c_str()
         );
+		exit(1);
     }
 
     rcstring dsk_fil = dsk + ".files";
-    int ifd = explain_open_or_die(dsk_fil.c_str(), O_RDONLY, 0666);
+    int ifd = open(dsk_fil.c_str(), O_RDONLY, 0666);
 
     assert(fep->block >= rt11.beginseg);
     unsigned block = fep->block - rt11.beginseg;
 
-    explain_lseek_or_die(ifd, block << 9, SEEK_SET);
+    lseek(ifd, block << 9, SEEK_SET);
     bool binary = false;
     {
         unsigned char data[512];
-        if (explain_read_or_die(ifd, data, 512) != 512)
-            explain_output_error_and_die("%s: short file", dsk_fil.c_str());
+        if (read(ifd, data, 512) != 512) {
+            printf("%s: short file", dsk_fil.c_str());
+			exit(1);
+		}
         for (size_t j = 0; j < 512; ++j)
         {
             unsigned char c = data[j];
@@ -379,28 +371,32 @@ extract_one_file(const direc &rt11, const rcstring &dsk, const rcstring &get)
             break;
         }
     }
-    explain_lseek_or_die(ifd, block << 9, SEEK_SET);
+    lseek(ifd, block << 9, SEEK_SET);
 
     if (binary)
     {
-        int ofd = explain_creat_or_die(get.c_str(), 0666);
+        int ofd = creat(get.c_str(), 0666);
         for (int j = 0; j < fep->lgth; ++j)
         {
             char data[512];
-            if (explain_read_or_die(ifd, data, 512) != 512)
-                explain_output_error_and_die("%s: short file", dsk_fil.c_str());
-            explain_write_or_die(ofd, data, 512);
+            if (read(ifd, data, 512) != 512) {
+                printf("%s: short file", dsk_fil.c_str());
+				exit(1);
+			}
+            write(ofd, data, 512);
         }
-        explain_close_or_die(ofd);
+        close(ofd);
     }
     else
     {
-        FILE *ofp = explain_fopen_or_die(get.c_str(), "w");
+        FILE *ofp = fopen(get.c_str(), "w");
         for (int j = 0; j < fep->lgth; ++j)
         {
             char data[512];
-            if (explain_read_or_die(ifd, data, 512) != 512)
-                explain_output_error_and_die("%s: short file", dsk_fil.c_str());
+            if (read(ifd, data, 512) != 512) {
+                printf("%s: short file", dsk_fil.c_str());
+				exit(1);
+			}
             for (size_t k = 0; k < 512; ++k)
             {
                 unsigned char c = data[k];
@@ -416,9 +412,9 @@ extract_one_file(const direc &rt11, const rcstring &dsk, const rcstring &get)
                 }
             }
         }
-        explain_fclose_or_die(ofp);
+        fclose(ofp);
     }
-    explain_close_or_die(ifd);
+    close(ifd);
 
     time_t when = fep->get_mtime();
     if (when > 0)
@@ -426,7 +422,7 @@ extract_one_file(const direc &rt11, const rcstring &dsk, const rcstring &get)
         struct utimbuf buf;
         buf.actime = when;
         buf.modtime = when;
-        explain_utime_or_die(get.c_str(), &buf);
+        utime(get.c_str(), &buf);
     }
 }
 
@@ -446,8 +442,6 @@ usage(void)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     rcstring dsk;
     rcstring get;
     bool list = false;
@@ -513,31 +507,33 @@ main(int argc, char **argv)
         size_t data_size = 0;
         {
             rcstring dsk_dir = dsk + ".dir";
-            int fd = explain_open_or_die(dsk_dir.c_str(), O_RDONLY, 0666);
+            int fd = open(dsk_dir.c_str(), O_RDONLY, 0666);
             struct stat st;
-            explain_fstat_or_die(fd, &st);
+            fstat(fd, &st);
             data_size = st.st_size;
             if (data_size > (1 << 20))
             {
-                explain_output_error_and_die
+                printf
                 (
                     "%s: file too big",
                     dsk_dir.c_str()
                 );
+				exit(1);
             }
             if (data_size < direc::min_size)
             {
-                explain_output_error_and_die
+                printf
                 (
                     "%s: file too small (%d < %d)",
                     dsk_dir.c_str(),
                     (int)data_size,
                     direc::min_size
                 );
+				exit(1);
             }
             data = (unsigned char *)malloc(data_size);
-            explain_read_or_die(fd, data, data_size);
-            explain_close_or_die(fd);
+            read(fd, data, data_size);
+            close(fd);
         }
 
         rt11.decode(data);

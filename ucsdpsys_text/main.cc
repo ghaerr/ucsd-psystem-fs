@@ -19,10 +19,6 @@
 #include <lib/config.h>
 #include <cstdlib>
 #include <getopt.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
-#include <libexplain/rename.h>
-#include <libexplain/utime.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -40,7 +36,7 @@
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsys_text";
     fprintf(stderr, "Usage: %s -d [ <filename>... ]\n", prog);
     fprintf(stderr, "       %s -e [ <filename>... ]\n", prog);
     fprintf(stderr, "       %s -V\n", prog);
@@ -106,7 +102,7 @@ insitu(const rcstring &ifn)
     //
     // Now rename the new file over the top of the old file.
     //
-    explain_rename_or_die(ofn.c_str(), ifn.c_str());
+    rename(ofn.c_str(), ifn.c_str());
 
     //
     // Now restore the access time and modified time.
@@ -114,7 +110,7 @@ insitu(const rcstring &ifn)
     struct utimbuf amt;
     amt.actime = st.st_atime;
     amt.modtime = st.st_mtime;
-    explain_utime_or_die(ifn.c_str(), &amt);
+    utime(ifn.c_str(), &amt);
 }
 
 
@@ -146,8 +142,6 @@ run(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     for (;;)
     {
         static const struct option options[] =

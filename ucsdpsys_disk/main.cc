@@ -23,12 +23,6 @@
 #include <cstring>
 #include <fcntl.h>
 #include <getopt.h>
-#include <libexplain/stat.h>
-#include <libexplain/closedir.h>
-#include <libexplain/opendir.h>
-#include <libexplain/readdir.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -50,7 +44,7 @@
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsys_disk";
     fprintf(stderr, "Usage: %s -f <disk.image> -l\n", prog);
     fprintf(stderr, "       %s -f <disk.image> -g <file.to.get>...\n", prog);
     fprintf(stderr, "       %s -f <disk.image> -p <file.to.put>...\n", prog);
@@ -89,13 +83,14 @@ get(directory *volume, const rcstring &fspec)
     directory_entry::pointer dep = volume->find(ucsd_filename);
     if (!dep)
     {
-        explain_output_error_and_die
+        printf
         (
             "open %s:%s: %s",
             volume->get_volume_name().c_str(),
             ucsd_filename.c_str(),
             strerror(ENOENT)
         );
+		exit(1);
     }
 
     input::pointer in = input_psystem::create(dep);
@@ -133,12 +128,13 @@ get_dir(directory *volume, const rcstring &dir)
     int err = dep->get_directory_entry_names(names);
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "getdents %s: %s",
             volume->get_volume_name().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
     for (size_t j = 0; j < names.size(); ++j)
     {
@@ -174,13 +170,14 @@ put(directory *volume, const rcstring &fspec)
         int err = dep->mknod(ucsd_filename, mode, 0);
         if (err < 0)
         {
-            explain_output_error_and_die
+            printf
             (
                 "create %s:%s: %s",
                 volume->get_volume_name().c_str(),
                 ucsd_filename.c_str(),
                 strerror(-err)
             );
+			exit(1);
         }
         dep = volume->find(ucsd_filename);
         assert(dep);
@@ -208,22 +205,22 @@ put(directory *volume, const rcstring &fspec)
 static void
 put_dir(directory *volume, const rcstring &dir, bool skip_dot)
 {
-    DIR *dp = explain_opendir_or_die(dir.c_str());
+    DIR *dp = opendir(dir.c_str());
     for (;;)
     {
-        dirent *dep = explain_readdir_or_die(dp);
+        dirent *dep = readdir(dp);
         if (!dep)
             break;
         rcstring name(dep->d_name);
         rcstring path = dir + "/" + name;
         struct stat st;
-        explain_stat_or_die(path.c_str(), &st);
+        stat(path.c_str(), &st);
         if (skip_dot && name[0] == '.')
             continue;
         if (S_ISREG(st.st_mode))
             put(volume, name.upcase() + "=" + path);
     }
-    explain_closedir_or_die(dp);
+    closedir(dp);
 }
 
 
@@ -233,24 +230,26 @@ remove(directory *volume, const rcstring &filename)
     directory_entry::pointer dep = volume->find(filename);
     if (!dep)
     {
-        explain_output_error_and_die
+        printf
         (
             "remove %s:%s: %s",
             volume->get_volume_name().c_str(),
             filename.c_str(),
             strerror(ENOENT)
         );
+		exit(1);
     }
     int err = dep->unlink();
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "unlink %s:%s: %s",
             volume->get_volume_name().c_str(),
             filename.c_str(),
             strerror(-err)
         );
+		exit(1);
     }
 }
 
@@ -279,11 +278,12 @@ decode_sort_name(const rcstring &name)
         return directory::sort_by_size;
     if (lc_name == "kind" || lc_name == "type")
         return directory::sort_by_kind;
-    explain_output_error_and_die
+    printf
     (
         "sort criterion %s unknown",
         name.quote_c().c_str()
     );
+	exit(1);
     return directory::sort_by_name;
 }
 
@@ -291,8 +291,6 @@ decode_sort_name(const rcstring &name)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     int listing_flag = 0;
     bool get_flag = false;
     bool put_flag = false;
@@ -407,18 +405,21 @@ main(int argc, char **argv)
     }
     if (!disk_image_filename)
     {
-        if (optind >= argc)
-            explain_output_error_and_die("no disk image file name specified");
+        if (optind >= argc) {
+            printf("no disk image file name specified");
+			exit(1);
+		}
         // Ugly, but probably what the user meant.
         disk_image_filename = argv[optind++];
     }
     if (boot_blocks && put_flag + get_flag != 1)
     {
-        explain_output_error_and_die
+        printf
         (
             "the --boot option must be accompanied by exactly one of the --get "
             "or --put options"
         );
+		exit(1);
     }
     if
     (
