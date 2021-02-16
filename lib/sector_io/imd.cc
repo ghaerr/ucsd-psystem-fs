@@ -21,10 +21,6 @@
 #include <cerrno>
 #include <cstdarg>
 #include <cstring>
-#include <libexplain/fclose.h>
-#include <libexplain/fopen.h>
-#include <libexplain/getc.h>
-#include <libexplain/output.h>
 
 #include <lib/sector_io/imd.h>
 #include <lib/debug.h>
@@ -158,7 +154,7 @@ sector_io_imd::~sector_io_imd()
 
 
 static void
-    LIBEXPLAIN_FORMAT_PRINTF(2, 3)
+    //LIBEXPLAIN_FORMAT_PRINTF(2, 3)
 file_not_in_imd_format(const rcstring &filename, const char *fmt, ...)
 {
     DEBUG(2, "yuck");
@@ -167,12 +163,13 @@ file_not_in_imd_format(const rcstring &filename, const char *fmt, ...)
     char buf[200];
     snprintf(buf, sizeof(buf), fmt, ap);
 
-    explain_output_error_and_die
+    printf
     (
         "file %s not in .IMD format (%s)",
         filename.quote_c().c_str(),
         buf
     );
+	exit(1);
 }
 
 
@@ -188,7 +185,7 @@ sector_io_imd::sector_io_imd(const rcstring &a_filename) :
     //
     // Open the file
     //
-    FILE *fp = explain_fopen_or_die(filename.c_str(), "rb");
+    FILE *fp = fopen(filename.c_str(), "rb");
 
     //
     // Read the file magic number and comment.
@@ -197,7 +194,7 @@ sector_io_imd::sector_io_imd(const rcstring &a_filename) :
     char *bp = buffer;
     for (;;)
     {
-        int c = explain_getc_or_die(fp);
+        int c = getc(fp);
         if (c == EOF)
         {
             file_not_in_imd_format(filename, "EOF before end of header");
@@ -221,7 +218,7 @@ sector_io_imd::sector_io_imd(const rcstring &a_filename) :
     {
         file_not_in_imd_format(filename, "disk image contains no tracks");
     }
-    explain_fclose_or_die(fp);
+    fclose(fp);
 
     //
     // consolidate all of the tracks
@@ -263,11 +260,12 @@ sector_io_imd::create(const rcstring &filename, bool read_only)
     DEBUG(2, "%s", __PRETTY_FUNCTION__);
     if (!read_only)
     {
-        explain_output_error_and_die
+        printf
         (
             "%s: the .IMD format is only supported for read-only access",
             filename.c_str()
         );
+		exit(1);
     }
     return pointer(new sector_io_imd(filename));
 }
@@ -296,7 +294,7 @@ bool
 sector_io_imd::read_track(FILE *fp)
 {
     DEBUG(2, "%s", __PRETTY_FUNCTION__);
-    int mode = explain_getc_or_die(fp);
+    int mode = getc(fp);
     if (mode == EOF)
     {
         return false;
@@ -350,7 +348,7 @@ void
 sector_io_imd::track::read(FILE *fp, const rcstring &fn)
 {
     DEBUG(2, "%s", __PRETTY_FUNCTION__);
-    int c = explain_getc_or_die(fp);
+    int c = getc(fp);
     if (c == EOF)
     {
         file_not_in_imd_format(fn, "eof before cylinder number");
@@ -358,7 +356,7 @@ sector_io_imd::track::read(FILE *fp, const rcstring &fn)
     cylinder = c;
     DEBUG(2, "cylinder = %d", cylinder);
 
-    c = explain_getc_or_die(fp);
+    c = getc(fp);
     if (c == EOF)
     {
         file_not_in_imd_format(fn, "eof before head number");
@@ -370,7 +368,7 @@ sector_io_imd::track::read(FILE *fp, const rcstring &fn)
     DEBUG(2, "head_map_present = %d", head_map_present);
     head &= 1;
 
-    c = explain_getc_or_die(fp);
+    c = getc(fp);
     if (c == EOF)
     {
         file_not_in_imd_format(fn, "eof before sector number");
@@ -378,7 +376,7 @@ sector_io_imd::track::read(FILE *fp, const rcstring &fn)
     sectors = c;
     DEBUG(2, "sectors = %d", sectors);
 
-    c = explain_getc_or_die(fp);
+    c = getc(fp);
     if (c == EOF)
         file_not_in_imd_format(fn, "eof before sector size code");
     if (c == EOF || c >= 7)
@@ -441,7 +439,7 @@ sector_io_imd::track::read(FILE *fp, const rcstring &fn)
             );
         }
         unsigned char *p = data + sector_map[j] * sector_size;
-        c = explain_getc_or_die(fp);
+        c = getc(fp);
         switch (c)
         {
         case 0:
@@ -460,7 +458,7 @@ sector_io_imd::track::read(FILE *fp, const rcstring &fn)
 
         case 2:
             // compressed data
-            c = explain_getc_or_die(fp);
+            c = getc(fp);
             if (c == EOF)
             {
                 file_not_in_imd_format(fn, "eof before sector data");

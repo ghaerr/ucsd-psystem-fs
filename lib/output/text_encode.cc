@@ -19,7 +19,6 @@
 #include <lib/config.h>
 #include <cassert>
 #include <cctype>
-#include <libexplain/output.h>
 
 #include <lib/rcstring/accumulator.h>
 #include <lib/output/text_encode.h>
@@ -155,7 +154,7 @@ output_text_encode::line_character(unsigned char c)
         else
         {
             line_accumulator.printf("\\x%02X", c);
-            explain_output_error
+            printf
             (
                 "%s: %d: warning: unprintable '\\x%02X' character",
                 deeper->filename().c_str(),
@@ -206,7 +205,7 @@ output_text_encode::write_one_line()
     {
         while (line.size() > characters_per_block)
         {
-            explain_output_error
+            printf
             (
                 "%s: %d: warning: line too long (%ld) split at column %d",
                 deeper->filename().c_str(),

@@ -20,8 +20,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <getopt.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
 #include <unistd.h>
 
 #include <lib/rcstring.h>
@@ -31,7 +29,7 @@
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsys_umount";
     fprintf(stderr, "Usage: %s <mount-point>\n", prog);
     fprintf(stderr, "       %s -V\n", prog);
     exit(1);
@@ -41,8 +39,6 @@ usage(void)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     for (;;)
     {
         static const struct option options[] =
@@ -75,8 +71,10 @@ main(int argc, char **argv)
     int sleep_ms = 20;
     for (int cumulative_ms = 0; ntries < 1000; )
     {
-        if (cumulative_ms >= maximum_ms)
-            explain_output_error_and_die("failed after %d attempts", ntries);
+        if (cumulative_ms >= maximum_ms) {
+            printf("failed after %d attempts", ntries);
+			exit(1);
+		}
         if (ntries)
         {
 #ifdef HAVE_USLEEP
@@ -93,7 +91,9 @@ main(int argc, char **argv)
         if (0 == system(command.c_str()))
             break;
     }
-    if (ntries > 1)
-        explain_output_error("succeeded after %d attempts", ntries);
-    return 0;
+    if (ntries > 1) {
+        printf("succeeded after %d attempts", ntries);
+		exit(1);
+	}
+	return 0;
 }

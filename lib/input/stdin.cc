@@ -22,8 +22,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <libexplain/fstat.h>
-#include <libexplain/read.h>
 
 #include <lib/input/stdin.h>
 
@@ -55,7 +53,7 @@ input_stdin::read_inner(void *data, size_t len)
     if (unbuffered)
         len = 1;
     int fd = fileno(stdin);
-    long result = explain_read_or_die(fd, data, len);
+    long result = ::read(fd, data, len);
     pos += result;
     return result;
 }
@@ -72,7 +70,7 @@ long
 input_stdin::length()
 {
     struct stat st;
-    explain_fstat_or_die(fileno(stdin), &st);
+    ::fstat(fileno(stdin), &st);
     if (!S_ISREG(st.st_mode))
         return -EINVAL;
     return st.st_size;
@@ -92,5 +90,5 @@ input_stdin::fpathconf_name_max()
 void
 input_stdin::fstat(struct stat &st)
 {
-    explain_fstat_or_die(fileno(stdin), &st);
+    ::fstat(fileno(stdin), &st);
 }

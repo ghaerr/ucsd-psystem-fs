@@ -21,8 +21,6 @@
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
 #include <unistd.h>
 
 #include <lib/debug.h>
@@ -38,7 +36,7 @@
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsys_interleave";
     fprintf(stderr, "Usage: %s -T<name> -d <infile> <outfile>\n", prog);
     fprintf(stderr, "       %s -T<name> -e <infile> <outfile>\n", prog);
     fprintf(stderr, "       %s -V\n", prog);
@@ -56,11 +54,12 @@ filter_factory(const sector_io::pointer &fp, const char *name)
         sector_io::pointer io = sector_io::guess_interleaving(fp);
         if (io)
             return io;
-        explain_output_error_and_die
+        printf
         (
             "%s: unable to guess interleave format",
             fp->get_filename().c_str()
         );
+		exit(1);
     }
     if (0 == strcasecmp(name, "apple"))
         return sector_io_apple::create(fp);
@@ -69,11 +68,12 @@ filter_factory(const sector_io::pointer &fp, const char *name)
         sector_io::pointer tmp = sector_io_offset::create(fp, 26 * 128);
         return sector_io_pdp::create(tmp);
     }
-    explain_output_error_and_die
+    printf
     (
         "interleave format %s unknown",
         rcstring(name).quote_c().c_str()
     );
+	exit(1);
     return fp;
 }
 
@@ -81,8 +81,6 @@ filter_factory(const sector_io::pointer &fp, const char *name)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     const char *interleave_type_name = 0;
     bool encode_flag = false;
     bool decode_flag = false;
@@ -128,14 +126,17 @@ main(int argc, char **argv)
     }
     if (encode_flag + decode_flag != 1)
     {
-        explain_output_error_and_die
+        printf
         (
             "you must specify exactly one of the --encode or "
                 "--decode options"
         );
+		exit(1);
     }
-    if (argc - optind != 2)
-        explain_output_error_and_die("two file names must be given");
+    if (argc - optind != 2) {
+        printf("two file names must be given");
+		exit(1);
+	}
     const char *infile = argv[optind];
     const char *outfile = argv[optind + 1];
     if (!interleave_type_name)
@@ -144,10 +145,11 @@ main(int argc, char **argv)
             interleave_type_name = "guess";
         else
         {
-            explain_output_error_and_die
+            printf
             (
                 "no interleave type (--type=name) specified"
             );
+			exit(1);
         }
     }
 
@@ -167,7 +169,8 @@ main(int argc, char **argv)
     int rc = inp->size_in_bytes();
     if (rc < 0)
     {
-        explain_output_error_and_die("stat %s: %s", infile, strerror(-rc));
+        printf("stat %s: %s", infile, strerror(-rc));
+		exit(1);
     }
     size_t size_in_bytes(rc);
     size_t bufsiz = (size_t)1 << 16;
@@ -190,7 +193,8 @@ main(int argc, char **argv)
         int err = inp->read(address, buffer, nbytes);
         if (err < 0)
         {
-            explain_output_error_and_die("read %s: %s", infile, strerror(-err));
+            printf("read %s: %s", infile, strerror(-err));
+			exit(1);
         }
 
         DEBUG(2, "outp->write(address = 0x%08lX, buffer = %p, size = %ld)",
@@ -198,12 +202,13 @@ main(int argc, char **argv)
         err = outp->write(address, buffer, nbytes);
         if (err < 0)
         {
-            explain_output_error_and_die
+            printf
             (
                 "write %s: %s",
                 infile,
                 strerror(-err)
             );
+			exit(1);
         }
 
         address += nbytes;
@@ -211,7 +216,8 @@ main(int argc, char **argv)
     rc = outp->sync();
     if (rc < 0)
     {
-        explain_output_error_and_die("sync %s: %s", infile, strerror(-rc));
+        printf("sync %s: %s", infile, strerror(-rc));
+		exit(1);
     }
     DEBUG(1, "close");
     delete buffer;

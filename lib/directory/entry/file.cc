@@ -21,7 +21,6 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <libexplain/output.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -617,7 +616,7 @@ directory_entry_file::fsck(concern_t concern_level)
     int number_of_errors = 0;
     if (dlastblock < dfirstblock)
     {
-        explain_output_error
+        printf
         (
             "directory entry %s: last block wrong (was %d, expected >= %d)",
             name.quote_c().c_str(),
@@ -631,7 +630,7 @@ directory_entry_file::fsck(concern_t concern_level)
     }
     if ((padding4 & 0x7FF8) != 0)
     {
-        explain_output_error
+        printf
         (
             "directory entry %s: padding4 not zero (%04X)",
             name.quote_c().c_str(),
@@ -645,7 +644,7 @@ directory_entry_file::fsck(concern_t concern_level)
     {
     case securedir:
     case untypedfile:
-        explain_output_error
+        printf
         (
             "directory entry %s: file kind %s (%d) not supported",
             name.quote_c().c_str(),
@@ -668,7 +667,7 @@ directory_entry_file::fsck(concern_t concern_level)
     }
     if (name.size() < 1)
     {
-        explain_output_error
+        printf
         (
             "directory entry %s: name too short",
             name.quote_c().c_str()
@@ -680,7 +679,7 @@ directory_entry_file::fsck(concern_t concern_level)
     else if (name.size() > 15)
     {
         // FIXME: test for illegal characters?
-        explain_output_error
+        printf
         (
             "directory entry %s: name too long",
             name.quote_c().c_str()
@@ -691,7 +690,7 @@ directory_entry_file::fsck(concern_t concern_level)
     }
     if (dlastblock < 1 || dlastblock > 512)
     {
-        explain_output_error
+        printf
         (
             "directory entry %s: dlastblock wrong (%d)",
             name.quote_c().c_str(),
@@ -703,7 +702,7 @@ directory_entry_file::fsck(concern_t concern_level)
     }
     if ((padding22 & 0xFC00) != 0)
     {
-        explain_output_error
+        printf
         (
             "directory entry %s: padding22 not zero (%04X)",
             name.quote_c().c_str(),

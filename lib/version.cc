@@ -18,7 +18,6 @@
 
 #include <lib/config.h>
 #include <cstdio>
-#include <libexplain/program_name.h>
 
 #include <lib/version.h>
 #include <lib/version_stamp.h>
@@ -27,7 +26,7 @@
 void
 version_print()
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsystem_fs";
     printf("%s version %s\n", prog, version_stamp());
     printf("Copyright (C) %s Peter Miller\n", copyright_years());
     printf("\n");

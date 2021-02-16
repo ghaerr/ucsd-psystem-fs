@@ -20,7 +20,6 @@
 #include <cassert>
 #include <cerrno>
 #include <cstring>
-#include <libexplain/output.h>
 #include <sys/statvfs.h>
 
 #include <lib/debug.h>
@@ -96,13 +95,14 @@ directory::meta_read(concern_t concern_level)
         {
             // slot empty
             // (volume_label->get_num_files() is wrong)
-            explain_output_error_and_die
+            printf
             (
                 "number of files in volume label (%ld) does not agree "
                     "with number of actual directory entries (%ld)",
                 (long)maxdents,
                 (long)fnum
             );
+            exit(1);
             volume_label->set_num_files(fnum);
             ++number_of_errors;
             break;
@@ -129,7 +129,7 @@ directory::meta_read(concern_t concern_level)
         }
         if (out_of_block_order)
         {
-            explain_output_error("directory entries not in block order");
+            printf("directory entries not in block order");
             ++number_of_errors;
             // We always fix this error.
             files.sort_by_first_block();
@@ -144,7 +144,7 @@ directory::meta_read(concern_t concern_level)
             directory_entry::pointer dep = files[j];
             if (dep->get_first_block() < block_num)
             {
-                explain_output_error
+                printf
                 (
                     "directory entry %s: start block overlaps previous file: "
                         "was %d, should be %d",
@@ -166,7 +166,7 @@ directory::meta_read(concern_t concern_level)
             directory_entry::pointer dep = files[j];
             if (dep->get_last_block() > volume_label->get_eov_block())
             {
-                explain_output_error
+                printf
                 (
                     "directory entry %s: last block beyond disk: "
                         "was %d, should be %d",

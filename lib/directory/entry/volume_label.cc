@@ -21,7 +21,6 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <libexplain/output.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -347,7 +346,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     int number_of_errors = 0;
     if (dfirstblock != 0)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: first block not zero (%d)",
             deeper->get_filename().c_str(),
@@ -359,7 +358,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     }
     if (dlastblock != 6 && dlastblock != 10)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: last block not six (%d)",
             deeper->get_filename().c_str(),
@@ -371,7 +370,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     }
     if (padding4 != 0)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: padding4 not zero (%04X)",
             deeper->get_filename().c_str(),
@@ -383,7 +382,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     }
     if (name.size() < 0)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: name too short",
             deeper->get_filename().c_str()
@@ -395,7 +394,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     else if (name.size() > 7)
     {
         // FIXME: test for illegal characters?
-        explain_output_error
+        printf
         (
             "%s: volume label: name too long",
             deeper->get_filename().c_str()
@@ -407,7 +406,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     int actual_blocks = deeper->size_in_bytes() >> 9;
     if (deovblk != actual_blocks)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: end-of-volume block incorrect (was %d, "
                 "expected %d)",
@@ -421,7 +420,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     }
     if (dloadtime != 0)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: load time not zero (%04X)",
             deeper->get_filename().c_str(),
@@ -433,7 +432,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     }
     if (padding22 != 0)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: padding22 not zero (%04X)",
             deeper->get_filename().c_str(),
@@ -445,7 +444,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     }
     if (padding24 != 0)
     {
-        explain_output_error
+        printf
         (
             "%s: volume label: padding24 not zero (%04X)",
             deeper->get_filename().c_str(),
@@ -457,7 +456,7 @@ directory_entry_volume_label::fsck(concern_t concern_level)
     }
     if (dnumfiles < 0 || dnumfiles > int(max_dir_ents))
     {
-        explain_output_error
+        printf
         (
             "%s: number of files absurd (got %ld, maximum %ld)",
             deeper->get_filename().c_str(),

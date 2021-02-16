@@ -19,7 +19,6 @@
 #include <lib/config.h>
 #include <cstdio>
 #include <unistd.h>
-#include <libexplain/write.h>
 
 #include <lib/output/stdout.h>
 #include <lib/rcstring.h>
@@ -59,7 +58,7 @@ output_stdout::filename()
 void
 output_stdout::write_inner(const void *data, size_t len)
 {
-    explain_write_or_die(fileno(stdout), data, len);
+    ::write(fileno(stdout), data, len);
     if (len > 0)
         bol = (((const char *)data)[len - 1] == '\n');
     pos += len;

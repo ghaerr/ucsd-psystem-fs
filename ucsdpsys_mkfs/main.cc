@@ -24,12 +24,6 @@
 #include <cstring>
 #include <fcntl.h>
 #include <getopt.h>
-#include <libexplain/close.h>
-#include <libexplain/fstat.h>
-#include <libexplain/open.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
-#include <libexplain/write.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -73,11 +67,13 @@
 static void
 zero_whole_volume(const char *filename, unsigned size_kb)
 {
-    int fd = explain_open_or_die(filename, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    int fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0666);
     struct stat st;
-    explain_fstat_or_die(fd, &st);
-    if (!S_ISREG(st.st_mode))
-        explain_output_error_and_die("%s: not a regular file", filename);
+    fstat(fd, &st);
+    if (!S_ISREG(st.st_mode)) {
+        printf("%s: not a regular file", filename);
+	exit(1);
+    }
 
     //
     // FIXME: At the moment, we only know how to build Apple volumes.
@@ -89,16 +85,16 @@ zero_whole_volume(const char *filename, unsigned size_kb)
     size_t ntracks = size_kb / 4;
     for (unsigned track = 0; track < ntracks; ++track)
     {
-        explain_write_or_die(fd, block, sizeof(block));
+        write(fd, block, sizeof(block));
     }
-    explain_close_or_die(fd);
+    close(fd);
 }
 
 
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsys_mkfs";
     fprintf(stderr, "Usage: %s <filename>\n", prog);
     fprintf(stderr, "       %s -V\n", prog);
     exit(1);
@@ -113,11 +109,12 @@ parse_size(char *text)
     if (ep == text)
     {
         yuck:
-        explain_output_error_and_die
+        printf
         (
             "unable to turn \"%s\" into a disk size in KB",
             text
         );
+	exit(1);
     }
     while (*ep && isspace((unsigned char)*ep))
         ++ep;
@@ -197,8 +194,6 @@ parse_size(char *text)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
     rcstring volid;
     bool twin = false;
     const char *interleave = "none";
@@ -238,18 +233,20 @@ main(int argc, char **argv)
                     mtype = mtype_from_name_fuzzy(name);
                     if (mtype != mtype_undefined)
                     {
-                        explain_output_error_and_die
+                        printf
                         (
                             "architecture %s unknown, did you mean %s instead?",
                             name.quote_c().c_str(),
                             mtype_name(mtype).quote_c().c_str()
                         );
+			exit(1);
                     }
-                    explain_output_error_and_die
+                    printf
                     (
                         "architecture %s unknown",
                         name.quote_c().c_str()
                     );
+		    exit(1);
                 }
                 byte_sex = byte_sex_from_mtype(mtype);
             }
@@ -259,20 +256,22 @@ main(int argc, char **argv)
             size_kb = parse_size(optarg);
             if (size_kb & 3)
             {
-                explain_output_error_and_die
+                printf
                 (
                     "the size given (%dKB) is not a multiple of 4KB",
                     size_kb
                 );
+		exit(1);
             }
             if (size_kb < 4 || size_kb > MAX_DISK_SIZE_KB)
             {
-                explain_output_error_and_die
+                printf
                 (
                     "the size given (%dKB) is not in the range 4 to %d",
                     size_kb,
                     MAX_DISK_SIZE_KB
                 );
+		exit(1);
             }
             break;
 

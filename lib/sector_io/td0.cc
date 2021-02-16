@@ -20,9 +20,6 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <libexplain/fopen.h>
-#include <libexplain/getc.h>
-#include <libexplain/output.h>
 
 #include <lib/debug.h>
 #include <lib/endof.h>
@@ -277,10 +274,11 @@ static unsigned char
 get_char_raw(void)
 {
     DEBUG(3, "%s", __PRETTY_FUNCTION__);
-    int c = explain_getc_or_die(fp);
+    int c = getc(fp);
     if (c == EOF)
     {
-        explain_output_error_and_die("%s: premature end-of-file", fn.c_str());
+        printf("%s: premature end-of-file", fn.c_str());
+		exit(1);
         c = 0;
         Eof = true;
     }
@@ -475,7 +473,7 @@ sector_io_td0::sector_io_td0(const rcstring &a_filename) :
     // Open the file
     //
     fn = filename;
-    fp = explain_fopen_or_die(filename.c_str(), "rb");
+    fp = fopen(filename.c_str(), "rb");
 
     Advcomp = false;
     unsigned comp_crc = 0;
@@ -489,11 +487,12 @@ sector_io_td0::sector_io_td0(const rcstring &a_filename) :
         enable_decompress = true;
     else
     {
-        explain_output_error_and_die
+        printf
         (
             "%s: wrong magic number",
             filename.c_str()
         );
+		exit(1);
     }
 
     int check_sequence = get_byte(comp_crc);
@@ -514,7 +513,7 @@ sector_io_td0::sector_io_td0(const rcstring &a_filename) :
 
     if (comp_crc != file_crc)
     {
-        explain_output_error_and_die
+        printf
         (
             "%s: header CRC mismatch (calculated 0x%04X, "
                 "header contains 0x%04X",
@@ -522,6 +521,7 @@ sector_io_td0::sector_io_td0(const rcstring &a_filename) :
             comp_crc,
             file_crc
         );
+		exit(1);
     }
 
     if (enable_decompress)
@@ -569,12 +569,13 @@ sector_io_td0::sector_io_td0(const rcstring &a_filename) :
         break;
 
     default:
-        explain_output_error_and_die
+        printf
         (
             "%s: drive type %02X unknown",
             filename.c_str(),
             drive_type
         );
+		exit(1);
     }
     data = new unsigned char [data_size];
     data_pos = 0;
@@ -606,7 +607,7 @@ sector_io_td0::sector_io_td0(const rcstring &a_filename) :
         DEBUG(2, "header comment = %s", ac.mkstr().quote_c().c_str());
         if (file_crc != comp_crc)
         {
-            explain_output_error_and_die
+            printf
             (
                 "%s: comment CRC mismatch (calculated 0x%04X, "
                     "comment header contains 0x%04X",
@@ -614,6 +615,7 @@ sector_io_td0::sector_io_td0(const rcstring &a_filename) :
                 comp_crc,
                 file_crc
             );
+			exit(1);
         }
     }
 
@@ -643,11 +645,12 @@ sector_io_td0::create(const rcstring &a_filename, bool read_only)
     DEBUG(2, "%s", __PRETTY_FUNCTION__);
     if (!read_only)
     {
-        explain_output_error_and_die
+        printf
         (
             "%s: the .TD0 format is only supported for read-only access",
             a_filename.c_str()
         );
+		exit(1);
     }
     return pointer(new sector_io_td0(a_filename));
 }
@@ -690,7 +693,7 @@ sector_io_td0::read_track(void)
     comp_crc &= 0xFF;
     if (file_crc != comp_crc)
     {
-        explain_output_error_and_die
+        printf
         (
             "%s: tracker header CRC error (calculated 0x%02X, "
                 "track header has 0x%02X)",
@@ -698,6 +701,7 @@ sector_io_td0::read_track(void)
             comp_crc,
             file_crc
         );
+		exit(1);
     }
 
     //
@@ -818,12 +822,13 @@ sector_io_td0::read_sector(void)
             break;
 
         default:
-            explain_output_error_and_die
+            printf
             (
                 "%s: encoding method 0x%02X unknown",
                 filename.c_str(),
                 encoding_method
             );
+			exit(1);
         }
         DEBUG(2, "mark");
     }
@@ -833,7 +838,7 @@ sector_io_td0::read_sector(void)
 #if 0
     if ((unsigned char)comp_crc != file_crc)
     {
-        explain_output_error_and_die
+        printf
         (
             "%s: sector CRC mismatch (calculated 0x%02X, "
                 "sector header has 0x%02X)",
@@ -841,6 +846,7 @@ sector_io_td0::read_sector(void)
             (unsigned char)comp_crc,
             file_crc
         );
+		exit(1);
     }
 #else
     (void)file_crc;

@@ -22,9 +22,8 @@
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>
-#include <libexplain/output.h>
-#include <libexplain/program_name.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <lib/debug.h>
 #include <lib/directory.h>
@@ -665,7 +664,7 @@ static fuse_operations ops =
 static void
 usage(void)
 {
-    const char *prog = explain_program_name_get();
+    const char *prog = "ucsdpsys_mount";
     fprintf(stderr, "Usage: %s [ <option>... ] <volume> <dir>\n", prog);
     fprintf(stderr, "       %s -V\n", prog);
     exit(1);
@@ -675,15 +674,12 @@ usage(void)
 int
 main(int argc, char **argv)
 {
-    explain_program_name_set(argv[0]);
-    explain_option_hanging_indent_set(4);
-
     //
     // Parse the command line options.
     //
     rcstring_list subset;
     rcstring_list mount_options;
-    subset.push_back(explain_program_name_get());
+    subset.push_back("ucsdpsys_mount");
     bool read_only_flag = false;
     bool text_on_the_fly = false;
     bool foreground = false;
@@ -818,8 +814,8 @@ main(int argc, char **argv)
     //
     // Send any future error messages to syslog
     //
-    if (!foreground)
-        explain_output_register(explain_output_syslog_new());
+    //if (!foreground)
+        //explain_output_register(explain_output_syslog_new());
 
     //
     // Mount the file systems and start the fuse loop running to handle

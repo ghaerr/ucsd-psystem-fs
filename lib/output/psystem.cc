@@ -20,7 +20,6 @@
 #include <cassert>
 #include <cerrno>
 #include <cstring>
-#include <libexplain/output.h>
 
 #include <lib/debug.h>
 #include <lib/directory/entry.h>
@@ -41,23 +40,25 @@ output_psystem::~output_psystem()
     int err = dep->flush();
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "flush %s: %s",
             filename().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
     err = dep->release();
     if (err < 0)
     {
         errno = -err;
-        explain_output_error_and_die
+        printf
         (
             "release %s: %s",
             filename().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
 }
 
@@ -69,23 +70,25 @@ output_psystem::output_psystem(directory_entry::pointer a_dep) :
     int err = dep->open();
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "open %s: %s",
             filename().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
 
     err = dep->truncate(0);
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "truncate %s: %s",
             filename().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
 }
 
@@ -103,12 +106,13 @@ output_psystem::write_inner(const void *data, size_t size)
     int n = dep->write(address, data, size);
     if (n < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "write %s: %s",
             filename().quote_c().c_str(),
             strerror(-n)
         );
+		exit(1);
     }
     DEBUG(3, "n = %d (expected %d)", n, (int)size);
     assert((size_t)n == size);
@@ -123,12 +127,13 @@ output_psystem::flush_inner()
     int err = dep->flush();
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "flush %s: %s",
             filename().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
 }
 
@@ -139,12 +144,13 @@ output_psystem::utime_ns(const struct timespec *utb)
     int err = dep->utime_ns(utb);
     if (err < 0)
     {
-        explain_output_error_and_die
+        printf
         (
             "utimes %s: %s",
             filename().quote_c().c_str(),
             strerror(-err)
         );
+		exit(1);
     }
 }
 
